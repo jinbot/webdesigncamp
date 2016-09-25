@@ -1,0 +1,14 @@
+#main_footer {
+	background-color: #6A6A6A;
+	color: white;	
+
+	margin-top: 15px;
+	padding: 5px 10px;
+}
+
+#main_footer address {
+	font-style: normal;
+	font-size: 15px;
+
+	margin: 10px 0;
+}

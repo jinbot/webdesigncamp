@@ -1,0 +1,19 @@
+#ad_contents_wrapper {
+	text-align: center;
+}
+
+#ad_contents_wrapper h2 {
+	text-align: left;
+}
+
+#ad_contents_wrapper strong {
+	display: block;
+	margin: 5px 0;
+
+	font-size: 20px;
+}
+
+#ad_contents_wrapper li {
+	display: inline-block;
+	padding: 5px;
+}

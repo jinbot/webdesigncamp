@@ -1,0 +1,151 @@
+<h1>동문갤러리</h1>
+<form class="localupload">
+		<div class="photobox">
+			<input type="file" name="photo" id="photo"  ondragover="dragover()" ondragleave="dragleave()" multiple>
+		</div>
+</form>
+<div id="preview"></div>
+<div id="popup"></div>
+<script>
+	var images = [];
+	$("#photo").change(function(){
+		var files = this.files;
+		for( var i=0; i<files.length; i++ ){
+			var imgtype = files[i].type;
+			if( imgtype=="image/jpeg" || imgtype=="image/gif" || imgtype=="image/png" ) readFile(files[i]);	
+		}
+		$(".photobox").css({"background-color":"pink"});
+	});
+
+	function getNewSize(box,w,h){
+		var newsize = {"width":0,"height":0};
+		if( w > h ) {
+			newsize.width = box;
+			newsize.height = (h * box)/w;
+		} else if( h > w ) {
+			newsize.width = (w * box) / h;
+			newsize.height = box;
+		} else {
+			newsize.width = box;
+			newsize.height = box;
+		}
+		return newsize;
+	}
+	function readFile(file){
+		if( ! file ) return;
+		var reader = new FileReader();
+		reader.onload = function(event){
+			var src = event.target.result;
+			var img = new Image();
+			img.onload = function(){
+				var newsize = getNewSize(200,this.width,this.height);
+				this.width = newsize.width;
+				this.height = newsize.height;
+				addPhoto(src,200,newsize.width,newsize.height,images.length);
+				var image = {
+					"src":src,
+					"width":newsize.width,
+					"height":newsize.height,
+					"name":file.name
+				};
+				images.push(image);	
+				var data = JSON.stringify(images);
+				localStorage.setItem("images",data);			
+			};
+			img.src = src;
+		}
+		reader.readAsDataURL(file);
+	}
+
+	function dragover(event){
+		$(".photobox").css({"background-color":"red"});
+	}
+
+	function dragleave(event){
+		$(".photobox").css({"background-color":"pink"});
+	}
+
+	window.onload = function(){
+		var data = localStorage.getItem("images");
+		if( data ) {
+			var json = JSON.parse(data);	
+			for(var i=0;i<json.length;i++){
+				images.push(json[i]);
+			}
+			if( images ) {
+				for(var j=0;j<images.length;j++){
+					addPhoto(images[j].src,200,images[j].width,images[j].height,j);
+					//$("#preview").prepend(img);
+				}
+			}
+		}
+	}
+
+	function addPhoto(src,box,width,height,index){
+		var left, top;
+		if( width > height ) {
+			left = 0;
+			top = (box/2) - (height/2);
+		} else if ( width < height ){
+			left = (box/2) - (width/2);
+			top = 0;
+		} else {
+			left = 0;
+			top = 0;
+		}
+		var html = "<div>";
+		html += "<div class='btn-x' data-index='" + index + "'>X</div>";
+		html += "<img src='" + src + "' width='" + width + "' height='" + height + "' style='left:" + left + "px;top:" + top + "px;'>";
+		html += "</div>";
+		$("#preview").append(html);
+	}
+
+	$("#preview").on("click",".btn-x",function(){
+		var index = $(this).attr("data-index");
+		images.splice(index,1);
+		var data = JSON.stringify(images);
+		localStorage.setItem("images",data);			
+		$(this).parent("div").remove();
+		var btns = $("#preview > div > .btn-x");
+		for(var k=0;k<images.length;k++){
+			$(btns[k]).attr("data-index",k);
+		}
+	});
+
+	$("#preview").on("click","div > img",function(){
+		var index = $(this).parent("div").children("div").attr("data-index");
+		var box = 500;
+		var image = new Image();
+		image.src = images[index].src;
+		image.onload = function(){
+			var x = this.width;
+			var y = this.height;
+			var newsize = getNewSize(box,x,y);
+			this.width = newsize.width;
+			this.height = newsize.height;
+			$("#popup").html(this);
+			$("#popup").dialog({
+				width: 550,
+				height: 550,
+				title: images[index].name,
+				buttons: {
+					"삭제":function(){
+						var btns = $("[data-index="+index+"]");
+						$(btns).click();
+						$(this).dialog("close");
+					},
+					"다운로드":function(){
+						var link = document.createElement("a");
+						link.download = name;
+						link.href = images[index].src;
+						link.click();
+					},
+					"닫기":function(){
+						$(this).dialog("close");
+					}
+				}
+			});
+		};
+	});
+
+</script>
